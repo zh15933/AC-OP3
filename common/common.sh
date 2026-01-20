@@ -215,6 +215,36 @@ fi
 
 # 更新feeds后再次修改补充
 cd ${HOME_PATH}
+# ----------------------------------------------------------
+# Prefer packages from datout feed
+#
+# Goal: keep only maintaining https://github.com/datout/openwrt-package
+# - If a package exists in feeds/datout, remove the same package dir from
+#   other feeds/package trees so `./scripts/feeds install -a` will pick datout.
+# - This is especially important for Passwall dependencies (sing-box/geoview...)
+#   to avoid older duplicates from official feeds.
+# ----------------------------------------------------------
+if [[ -d "${HOME_PATH}/feeds/datout" ]]; then
+  # Only treat package-root Makefiles as packages.
+  # In datout feed, packages are synced into:
+  #   feeds/datout/<pkg>/Makefile
+  # Limit depth strictly to avoid catching internal Makefiles (e.g. "files/Makefile").
+  mapfile -t _datout_pkgs < <(
+    find "${HOME_PATH}/feeds/datout" -maxdepth 2 -mindepth 2 -type f -name Makefile 2>/dev/null \
+      | awk -F'/' '{print $(NF-1)}' \
+      | sort -u
+  )
+
+  for x in "${_datout_pkgs[@]}"; do
+    [[ -z "$x" ]] && continue
+    find "${HOME_PATH}/feeds" "${HOME_PATH}/package" \
+      -path "${HOME_PATH}/feeds/datout" -prune -o \
+      -path "${HOME_PATH}/feeds/datouttheme" -prune -o \
+      -path "${HOME_PATH}/feeds/OpenClash" -prune -o \
+      -path "${HOME_PATH}/package/luci-theme-argon" -prune -o \
+      -name "$x" -type d -exec rm -rf {} +
+  done
+fi
 z="luci-theme-argon,luci-app-argon-config,luci-theme-Butterfly,luci-theme-netgear,luci-theme-atmaterial, \
 luci-theme-rosy,luci-theme-darkmatter,luci-theme-infinityfreedom,luci-theme-design,luci-app-design-config, \
 luci-theme-bootstrap-mod,luci-theme-freifunk-generic,luci-theme-opentomato,luci-theme-kucat, \
