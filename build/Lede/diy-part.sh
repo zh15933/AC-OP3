@@ -45,6 +45,10 @@ export Password_free_login="1"               # 设置首次登录后台密码为
 # 增加AdGuardHome插件和核心
 export AdGuardHome_Core="1"                  # 编译固件时自动增加AdGuardHome插件和AdGuardHome插件核心,需要注意的是一个核心20多MB的,小闪存机子搞不来(1为启用命令,填0为不作修改)
 
+# === 可选开关（编译特性） ===
+export Enable_FW4="1"                    # 启用 fw4(nftables) 防火墙：1=启用（需要源码支持/会自动尝试拉取 firewall4 包），0=默认 iptables/firewall3
+export Preload_GeoData="1"               # 预置 GeoIP/GeoSite 数据：1=编译时下载写入固件（约30MB），0=不预置
+
 # 开启NTFS格式盘挂载
 export Automatic_Mount_Settings="0"          # 编译时加入开启NTFS格式盘挂载的所需依赖(1为启用命令,填0为不作修改)
 

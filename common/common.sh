@@ -939,34 +939,86 @@ case "$ARCH_TYPE" in
 esac
 
 if [[ -n "${Arch}" ]] && [[ "${AdGuardHome_Core}" == "1" ]]; then
-  rm -rf ${HOME_PATH}/AdGuardHome && rm -rf ${HOME_PATH}/files/usr/bin
+  # 仅清理 AdGuardHome 相关文件，避免误删 files/usr/bin 下的其他自定义内容
+  rm -rf "${HOME_PATH}/AdGuardHome" "${HOME_PATH}/files/usr/bin/AdGuardHome" "${HOME_PATH}/files/usr/bin/AdGuardHome_"* 2>/dev/null || true
+  mkdir -p "${HOME_PATH}/files/usr/bin"
+
+  # 获取 AdGuardHome 最新版本号（复用作者 API）
   if [[ ! -f "$LINSHI_COMMON/language/AdGuardHome.api" ]]; then
     if ! wget -q https://github.com/281677160/common/releases/download/API/AdGuardHome.api -O "$LINSHI_COMMON/language/AdGuardHome.api"; then
       TIME r "AdGuardHome.api下载失败"
     fi
   fi
+
   if [[ -f "$LINSHI_COMMON/language/AdGuardHome.api" ]]; then
-    latest_ver="$(grep -E 'tag_name' "$LINSHI_COMMON/language/AdGuardHome.api" |grep -E 'v[0-9.]+' -o 2>/dev/null)"
-    wget -q https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_${Arch}.tar.gz
+    latest_ver="$(grep -E 'tag_name' "$LINSHI_COMMON/language/AdGuardHome.api" | grep -E 'v[0-9.]+' -o 2>/dev/null)"
+    wget -q "https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_${Arch}.tar.gz"
+
     if [[ -f "AdGuardHome_${Arch}.tar.gz" ]]; then
-      tar -zxf AdGuardHome_${Arch}.tar.gz -C ${HOME_PATH}
+      tar -zxf "AdGuardHome_${Arch}.tar.gz" -C "${HOME_PATH}"
     fi
-    mkdir -p ${HOME_PATH}/files/usr/bin
+
+    # 关键修复：把核心以“文件”形式预置到 /usr/bin/AdGuardHome，避免 LuCI 识别为目录导致“核心缺失”
     if [[ -f "${HOME_PATH}/AdGuardHome/AdGuardHome" ]]; then
-      mv -f ${HOME_PATH}/AdGuardHome ${HOME_PATH}/files/usr/bin/
-      chmod +x ${HOME_PATH}/files/usr/bin/AdGuardHome/AdGuardHome
-      echo -e "\nCONFIG_PACKAGE_luci-app-adguardhome=y" >> ${HOME_PATH}/.config
-      echo "增加luci-app-adguardhome和下载AdGuardHome核心完成"
+      install -m 0755 "${HOME_PATH}/AdGuardHome/AdGuardHome" "${HOME_PATH}/files/usr/bin/AdGuardHome"
+      echo -e "\nCONFIG_PACKAGE_luci-app-adguardhome=y" >> "${HOME_PATH}/.config"
+      echo "增加luci-app-adguardhome并预置AdGuardHome核心完成（/usr/bin/AdGuardHome）"
     else
-      echo -e "\nCONFIG_PACKAGE_luci-app-adguardhome=y" >> ${HOME_PATH}/.config
+      echo -e "\nCONFIG_PACKAGE_luci-app-adguardhome=y" >> "${HOME_PATH}/.config"
       echo "下载AdGuardHome核心失败"
     fi
-    rm -rf ${HOME_PATH}/{AdGuardHome_${Arch}.tar.gz,AdGuardHome}
+
+    rm -rf "${HOME_PATH}/AdGuardHome" "AdGuardHome_${Arch}.tar.gz" 2>/dev/null || true
   fi
 else
+  # 未启用则清理可能残留的核心文件
   if [[ -f "${HOME_PATH}/files/usr/bin/AdGuardHome" ]] && [[ ! "${AdGuardHome_Core}" == "1" ]]; then
-    rm -rf ${HOME_PATH}/files/usr/bin/AdGuardHome
+    rm -rf "${HOME_PATH}/files/usr/bin/AdGuardHome"
   fi
+fi
+
+# 预置 GeoIP/GeoSite 数据（可选）
+if [[ "${Preload_GeoData}" == "1" ]]; then
+  echo "开始预置 GeoIP/GeoSite 数据到固件（/usr/share/v2ray）..."
+  mkdir -p "${HOME_PATH}/files/usr/share/v2ray" "${HOME_PATH}/files/usr/share/xray"
+  if command -v curl >/dev/null 2>&1; then
+    curl -L --retry 3 --connect-timeout 15 -o "${HOME_PATH}/files/usr/share/v2ray/geoip.dat"   "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    curl -L --retry 3 --connect-timeout 15 -o "${HOME_PATH}/files/usr/share/v2ray/geosite.dat" "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+  else
+    wget -q -O "${HOME_PATH}/files/usr/share/v2ray/geoip.dat"   "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    wget -q -O "${HOME_PATH}/files/usr/share/v2ray/geosite.dat" "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+  fi
+  # 兼容 Xray 默认路径
+  ln -sf ../v2ray/geoip.dat   "${HOME_PATH}/files/usr/share/xray/geoip.dat"
+  ln -sf ../v2ray/geosite.dat "${HOME_PATH}/files/usr/share/xray/geosite.dat"
+fi
+
+# fw4(nftables) 开关（可选）
+if [[ "${Enable_FW4}" == "1" ]]; then
+  echo "启用 fw4(nftables) 防火墙..."
+  # 如果源码不存在 firewall4，则尝试从 OpenWrt 官方拉取（LEDE 可能默认没有）
+  if [[ ! -d "${HOME_PATH}/package/network/config/firewall4" ]]; then
+    mkdir -p "${HOME_PATH}/package/network/config"
+    gitsvn https://github.com/openwrt/openwrt/tree/openwrt-23.05/package/network/config/firewall4 "${HOME_PATH}/package/network/config/firewall4"
+  fi
+
+  # 选择 fw4 相关组件（尽量最小集）
+  sed -i \
+    -e '/^CONFIG_PACKAGE_firewall4=/d' \
+    -e '/^CONFIG_PACKAGE_firewall=/d' \
+    -e '/^# CONFIG_PACKAGE_firewall is not set/d' \
+    -e '/^CONFIG_PACKAGE_nftables=/d' \
+    -e '/^CONFIG_PACKAGE_kmod-nft-tproxy=/d' \
+    -e '/^CONFIG_PACKAGE_kmod-nft-socket=/d' \
+    "${HOME_PATH}/.config"
+
+  cat >> "${HOME_PATH}/.config" <<'EOF'
+CONFIG_PACKAGE_firewall4=y
+# CONFIG_PACKAGE_firewall is not set
+CONFIG_PACKAGE_nftables=y
+CONFIG_PACKAGE_kmod-nft-tproxy=y
+CONFIG_PACKAGE_kmod-nft-socket=y
+EOF
 fi
 
 # 源码内核版本号
