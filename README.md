@@ -1,6 +1,7 @@
 - cd openwrt && make menuconfig
-- 从(https://github.com/281677160/build-actions)来的，只是把common仓库合并了。
-
+- 感谢[281677160](https://github.com/281677160)，只是把common仓库合并了。
+ ##### 固件更新下载:
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/db-one/OpenWrt-AutoBuild?style=for-the-badge&label=固件更新下载)](https://github.com/datout/Openwrt-Auto/releases)
 
 <details>
 <summary>⬆️更新说明（2026年1月24号）</summary>
@@ -15,7 +16,7 @@
  <br>
   2025年12月25号
  <br><br>
-从(https://github.com/281677160/build-actions/issues/223)Fork来的。
+[281677160](https://github.com/281677160)Fork。
  
  
  ---
