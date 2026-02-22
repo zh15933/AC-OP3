@@ -1,5 +1,5 @@
 - cd openwrt && make menuconfig
-- 感谢[281677160](https://github.com/281677160)，只是把common仓库合并了。
+<!-- - 感谢[281677160](https://github.com/281677160)，只是把common仓库合并了。-->
  ##### 固件更新下载:
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/datout/OpenWrt-Auto?style=for-the-badge&label=固件更新下载)](https://github.com/datout/Openwrt-Auto/releases)
 
@@ -75,7 +75,7 @@ CONFIG_TARGET_armsr_armv8_DEVICE_generic=y
 <summary>📳本地编译</summary>
 <br><br>
 
-《[本地Ubuntu一键编译OpenWrt固件](https://github.com/281677160/bendi)》
+<!-- -->《[本地Ubuntu一键编译OpenWrt固件](https://github.com/281677160/bendi)》
 
 <br/>
 </details>
