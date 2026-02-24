@@ -7,7 +7,13 @@
 
 
 <details>
-<summary>⬆️更新说明（2026年2月23号）</summary>
+<summary>⬆️更新说明（2026年2月24号）</summary>
+
+ ---
+ <br>
+  2026年2月24号
+ <br><br>
+ 修复Imm源码编译出错
 
  ---
  <br>
