@@ -10,9 +10,9 @@ on:
     branches:
       - main
     paths:
-      - 'build/Lede/relevance/start'
+      - 'build/Immortalwrt/relevance/start'
   # schedule:
-  #   - 'build/Lede/relevance/start'
+  #   - 'build/Immortalwrt/relevance/start'
 env:
   GIT_REPOSITORY: ${{github.repository}}
   REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-       target: [Lede]
+       target: [Immortalwrt]
 
     steps:
     - name: 释放Ubuntu磁盘空间
@@ -85,7 +85,7 @@ jobs:
       uses: stupidloud/cachewrtbuild@main
       with:
         ccache: 'true'
-        mixkey: "${{ env.TARGET_PROFILE }}"
+        mixkey: "${{ env.SOURCE_CODE }}-${{ env.REPO_BRANCH }}-${{ env.TARGET_PROFILE }}"
         prefix: ${{ github.workspace }}/openwrt
 
     - name: 安装 aria2（多源自动切换）
@@ -99,15 +99,19 @@ jobs:
         set -euxo pipefail
         cd openwrt
 
-        export ARIA2C_OPTIONS="--connect-timeout=20 --timeout=20 --max-tries=20 --retry-wait=3 --lowest-speed-limit=200K"
+        mkdir -p tmp/aria2c
 
-        ( while true; do
-            echo "[$(date)] dl=$(du -sh dl 2>/dev/null | awk '{print $1}' || echo 0) files=$(ls -1 dl 2>/dev/null | wc -l || echo 0)"
-            ps -ef | egrep 'wget|curl|git|svn|aria2' | head -n 20 || true
-            sleep 60
-          done ) &
+        # 固定 server-stat 文件：让 aria2 在本次 job 内持续积累“哪个镜像更快”
+        export ARIA2C_OPTIONS="\
+          --connect-timeout=20 --timeout=20 --max-tries=20 --retry-wait=3 \
+          --lowest-speed-limit=200K \
+          --uri-selector=adaptive \
+          --server-stat-of=$PWD/tmp/aria2c/serverstat \
+          --server-stat-if=$PWD/tmp/aria2c/serverstat \
+          --server-stat-timeout=86400 \
+        "
 
-        # 关键：用 CONFIG_DOWNLOAD_TOOL_CUSTOM 驱动 include/download.mk 导出 DOWNLOAD_TOOL_CUSTOM
+        # 用 CONFIG_DOWNLOAD_TOOL_CUSTOM 确保 make 不把 DOWNLOAD_TOOL_CUSTOM 覆盖回去
         make download -j4 V=s CONFIG_DOWNLOAD_TOOL_CUSTOM=aria2c
 
     - name: 开始编译固件
