@@ -85,7 +85,7 @@ jobs:
       uses: stupidloud/cachewrtbuild@main
       with:
         ccache: 'true'
-        mixkey: "${{ env.TARGET_PROFILE }}"
+        mixkey: "${{ env.SOURCE_CODE }}-${{ env.REPO_BRANCH }}-${{ env.TARGET_PROFILE }}"
         prefix: ${{ github.workspace }}/openwrt
 
     - name: 安装 aria2（多源自动切换）
