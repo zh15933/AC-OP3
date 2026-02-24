@@ -6,13 +6,13 @@
 
 
 # 后台IP设置
-export Ipv4_ipaddr="192.168.2.2"            # 修改openwrt后台地址(填0为关闭)
+export Ipv4_ipaddr="192.168.88.1"            # 修改openwrt后台地址(填0为关闭)
 export Netmask_netm="255.255.255.0"         # IPv4 子网掩码（默认：255.255.255.0）(填0为不作修改)
-export Op_name="OpenWrt-123"                # 修改主机名称为OpenWrt-123(填0为不作修改)
+export Op_name="OpenWrt"                # 修改主机名称为OpenWrt-123(填0为不作修改)
 
 # 内核和系统分区大小(不是每个机型都可用)
-export Kernel_partition_size="0"            # 内核分区大小,每个机型默认值不一样 (填写您想要的数值,默认一般16,数值以MB计算，填0为不作修改),如果你不懂就填0
-export Rootfs_partition_size="0"            # 系统分区大小,每个机型默认值不一样 (填写您想要的数值,默认一般300左右,数值以MB计算，填0为不作修改),如果你不懂就填0
+export Kernel_partition_size="32"            # 内核分区大小,每个机型默认值不一样 (填写您想要的数值,默认一般16,数值以MB计算，填0为不作修改),如果你不懂就填0
+export Rootfs_partition_size="600"            # 系统分区大小,每个机型默认值不一样 (填写您想要的数值,默认一般300左右,数值以MB计算，填0为不作修改),如果你不懂就填0
 
 # 默认主题设置
 export Mandatory_theme="argon"              # 将bootstrap替换您需要的主题为必选主题(可自行更改您要的,源码要带此主题就行,填写名称也要写对) (填写主题名称,填0为不作修改)
@@ -45,6 +45,10 @@ export Password_free_login="1"               # 设置首次登录后台密码为
 # 增加AdGuardHome插件和核心
 export AdGuardHome_Core="0"                  # 编译固件时自动增加AdGuardHome插件和AdGuardHome插件核心,需要注意的是一个核心20多MB的,小闪存机子搞不来(1为启用命令,填0为不作修改)
 
+# === 可选开关（编译特性） ===
+export Enable_FW4="1"                    # 启用 fw4(nftables) 防火墙：1=启用（需要源码支持/会自动尝试拉取 firewall4 包），0=默认 iptables/firewall3
+export Preload_GeoData="1"               # 预置 GeoIP/GeoSite 数据：1=编译时下载写入固件（约30MB），0=不预置
+
 # 开启NTFS格式盘挂载
 export Automatic_Mount_Settings="0"          # 编译时加入开启NTFS格式盘挂载的所需依赖(1为启用命令,填0为不作修改)
 
@@ -64,6 +68,29 @@ export amlogic_kernel="6.1.120_6.12.15"
 export auto_kernel="true"
 export rootfs_size="512/2560"
 export kernel_usage="stable"
+
+# =======================
+# 增加 FakeHTTP（LEDE / OpenWrt Package + LuCI）
+# =======================
+# 要求执行位置在 OpenWrt/LEDE 源码根目录（能看到 package 目录）
+if [ ! -d "package" ]; then
+  echo "ERROR: diy-part.sh 当前目录不是源码根目录（未找到 package/）。"
+  echo "PWD=$(pwd)"
+  exit 1
+fi
+
+mkdir -p package/custom
+
+# 防止重复导致 clone 失败
+rm -rf package/custom/fakehttp package/custom/luci-app-fakehttp
+
+# FakeHTTP 本体（OpenWrt 打包）
+git clone --depth=1 https://github.com/yingziwu/openwrt-fakehttp package/custom/fakehttp \
+  || { echo "ERROR: clone openwrt-fakehttp failed"; exit 1; }
+
+# LuCI 界面（可选，但你说要“插件”，一般就加上）
+git clone --depth=1 https://github.com/yingziwu/luci-app-fakehttp package/custom/luci-app-fakehttp \
+  || { echo "ERROR: clone luci-app-fakehttp failed"; exit 1; }
 
 
 # 修改插件名字
