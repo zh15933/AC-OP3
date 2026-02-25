@@ -173,11 +173,13 @@ fi
 if [[ -d "${srcdir}/modules/luci-mod-system" ]]; then
   THEME_BRANCH="Theme2"
   rm -rf "${srcdir}"
-  gitsvn https://github.com/281677160/luci-theme-argon/tree/master "${HOME_PATH}/package/luci-theme-argon"
+  gitsvn https://github.com/jerrykuku/luci-theme-argon/tree/master "${HOME_PATH}/package/luci-theme-argon"
+  gitsvn https://github.com/jerrykuku/luci-app-argon-config/tree/master "${HOME_PATH}/package/luci-app-argon-config"
 else
   THEME_BRANCH="Theme1"
   rm -rf "${srcdir}"
-  gitsvn https://github.com/281677160/luci-theme-argon/tree/18.06 "${HOME_PATH}/package/luci-theme-argon"
+  gitsvn https://github.com/jerrykuku/luci-theme-argon/tree/18.06 "${HOME_PATH}/package/luci-theme-argon"
+  gitsvn https://github.com/jerrykuku/luci-app-argon-config/tree/18.06 "${HOME_PATH}/package/luci-app-argon-config"
 fi
 
 
@@ -188,12 +190,14 @@ echo "src-git datouttheme https://github.com/datout/openwrt-package.git;$THEME_B
 
 # 增加中文语言包
 if [[ -z "$(find "$HOME_PATH/package" -type d -name "default-settings" -print)" ]] && [[ "${THEME_BRANCH}" == "Theme2" ]]; then
-  gitsvn https://github.com/281677160/common/tree/main/Share/default-settings "${HOME_PATH}/package/default-settings"
+  rm -rf "${HOME_PATH}/package/default-settings"
+  cp -Rf "${LINSHI_COMMON}/Share/default-settings" "${HOME_PATH}/package/default-settings"
   grep -qw "libustream-wolfssl" "${HOME_PATH}/include/target.mk" && sed -i 's?\<libustream-wolfssl\>?libustream-openssl?g' "${HOME_PATH}/include/target.mk"
   ! grep -qw "dnsmasq-full" "${HOME_PATH}/include/target.mk" && sed -i 's?\<dnsmasq\>?dnsmasq-full?g' "${HOME_PATH}/include/target.mk"
   ! grep -qw "default-settings" "${HOME_PATH}/include/target.mk" && sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=default-settings?g' "${HOME_PATH}/include/target.mk"
 elif [[ -z "$(find "$HOME_PATH/package" -type d -name "default-settings" -print)" ]] && [[ "${THEME_BRANCH}" == "Theme1" ]]; then
-  gitsvn https://github.com/281677160/common/tree/main/Share/default-setting "${HOME_PATH}/package/default-settings"
+  rm -rf "${HOME_PATH}/package/default-settings"
+  cp -Rf "${LINSHI_COMMON}/Share/default-setting" "${HOME_PATH}/package/default-settings"
   grep -qw "libustream-wolfssl" "${HOME_PATH}/include/target.mk" && sed -i 's?\<libustream-wolfssl\>?libustream-openssl?g' "${HOME_PATH}/include/target.mk"
   ! grep -qw "dnsmasq-full" "${HOME_PATH}/include/target.mk" && sed -i 's?\<dnsmasq\>?dnsmasq-full?g' "${HOME_PATH}/include/target.mk"
   ! grep -qw "default-settings" "${HOME_PATH}/include/target.mk" && sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=default-settings?g' "${HOME_PATH}/include/target.mk"
@@ -297,7 +301,8 @@ if [[ ! -d "${HOME_PATH}/feeds/packages/lang/rust" ]]; then
 fi
 
 if [[ ! -d "${HOME_PATH}/feeds/packages/devel/packr" ]]; then
-  gitsvn https://github.com/281677160/common/tree/main/Share/packr ${HOME_PATH}/feeds/packages/devel/packr
+  mkdir -p "${HOME_PATH}/feeds/packages/devel"
+  cp -Rf "${LINSHI_COMMON}/Share/packr" "${HOME_PATH}/feeds/packages/devel/packr"
 fi
 
 # files大法，设置固件无烦恼
@@ -398,7 +403,7 @@ if [[ "${REPO_BRANCH}" == "openwrt-19.07" ]]; then
   rm -fr ${HOME_PATH}/feeds/datout/luci-app-kodexplorer
 fi
 if [[ "${REPO_BRANCH}" =~ (main|master|openwrt-24.10) ]]; then
-  gitsvn https://github.com/281677160/common/blob/main/Share/luci-app-nginx-pingos/Makefile ${HOME_PATH}/feeds/datout/luci-app-nginx-pingos/Makefile
+  cp -f "${LINSHI_COMMON}/Share/luci-app-nginx-pingos/Makefile" "${HOME_PATH}/feeds/datout/luci-app-nginx-pingos/Makefile"
 fi
 if [[ "${REPO_BRANCH}" == *"23.05"* ]]; then
   gitsvn https://github.com/coolsnowwolf/packages/tree/152022403f0ab2a85063ae1cd9687bd5240fe9b7/net/dnsproxy ${HOME_PATH}/feeds/packages/net/dnsproxy
@@ -966,16 +971,29 @@ if [[ -n "${Arch}" ]] && [[ "${AdGuardHome_Core}" == "1" ]]; then
   rm -rf "${HOME_PATH}/AdGuardHome" "${HOME_PATH}/files/usr/bin/AdGuardHome" "${HOME_PATH}/files/usr/bin/AdGuardHome_"* 2>/dev/null || true
   mkdir -p "${HOME_PATH}/files/usr/bin"
 
-  # 获取 AdGuardHome 最新版本号（复用作者 API）
-  if [[ ! -f "$LINSHI_COMMON/language/AdGuardHome.api" ]]; then
-    if ! wget -q https://github.com/281677160/common/releases/download/API/AdGuardHome.api -O "$LINSHI_COMMON/language/AdGuardHome.api"; then
-      TIME r "AdGuardHome.api下载失败"
-    fi
+  # 获取 AdGuardHome 最新版本号（复用作者 GitHub API；失败则回退仓库内缓存）
+  api_file="$LINSHI_COMMON/language/AdGuardHome.api"
+  tmp_api="${api_file}.tmp"
+  mkdir -p "$(dirname "${api_file}")"
+
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL --retry 3 --connect-timeout 15       "https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest"       -o "${tmp_api}" || true
+  else
+    wget -q -O "${tmp_api}"       "https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest" || true
   fi
 
-  if [[ -f "$LINSHI_COMMON/language/AdGuardHome.api" ]]; then
-    latest_ver="$(grep -E 'tag_name' "$LINSHI_COMMON/language/AdGuardHome.api" | grep -E 'v[0-9.]+' -o 2>/dev/null)"
-    wget -q "https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_${Arch}.tar.gz"
+  if [[ -s "${tmp_api}" ]] && grep -q '"tag_name"' "${tmp_api}"; then
+    mv -f "${tmp_api}" "${api_file}"
+  else
+    rm -f "${tmp_api}" 2>/dev/null || true
+  fi
+
+  if [[ -f "${api_file}" ]]; then
+    latest_ver="$(grep -E 'tag_name' "${api_file}" | grep -E 'v[0-9.]+' -o 2>/dev/null)"
+    if [[ -z "${latest_ver}" ]]; then
+      TIME r "解析 AdGuardHome 最新版本号失败"
+    else
+      wget -q "https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_${Arch}.tar.gz"
 
     if [[ -f "AdGuardHome_${Arch}.tar.gz" ]]; then
       tar -zxf "AdGuardHome_${Arch}.tar.gz" -C "${HOME_PATH}"
@@ -992,6 +1010,7 @@ if [[ -n "${Arch}" ]] && [[ "${AdGuardHome_Core}" == "1" ]]; then
     fi
 
     rm -rf "${HOME_PATH}/AdGuardHome" "AdGuardHome_${Arch}.tar.gz" 2>/dev/null || true
+    fi
   fi
 else
   # 未启用则清理可能残留的核心文件

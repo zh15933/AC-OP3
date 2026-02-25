@@ -1,6 +1,6 @@
 #!/bin/bash
-# https://github.com/281677160/build-actions  
-# common Module by 28677160
+# Build scripts are repo-local (no external build-actions dependency)
+# common module (repo-local)
 # matrix.target=${FOLDER_NAME}
 
 export SYNCHRONISE=""

@@ -51,7 +51,7 @@
  
  2、diy-part.sh文件内容有小修改，别直接复制
  
- 3、不想用这个仓库编译的话，可以使用 https://github.com/281677160/actions-openwrt 此仓库，原汁原味，啥都没修改过的
+ 3、不想用这个仓库编译的话，可以使用原版 actions-openwrt 仓库（请自行搜索）
 
 
  ---
@@ -203,7 +203,7 @@ CONFIG_TARGET_armsr_armv8_DEVICE_generic=y
 <br />
 <br>
 
-《[本地Ubuntu一键编译OpenWrt固件](https://github.com/281677160/bendi)》
+《本地Ubuntu一键编译OpenWrt固件（相关仓库请自行搜索）》
 
 <br />
 </details>

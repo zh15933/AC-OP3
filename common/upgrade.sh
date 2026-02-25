@@ -6,12 +6,17 @@ AUTOUPDATE_VERSION=8.0
 
 function Diy_Part1() {
 	find . -type d -name 'luci-app-autoupdate' | xargs -i rm -rf {}
-        if git clone -q --single-branch --depth=1 --branch=main https://github.com/281677160/luci-app-autoupdate $HOME_PATH/package/luci-app-autoupdate; then
-        	if ! grep -q "luci-app-autoupdate" "${HOME_PATH}/include/target.mk"; then
+	tmpdir="$(mktemp -d)"
+	if git clone -q --depth=1 https://github.com/Hyy2001X/AutoBuild-Packages "$tmpdir"; then
+		rm -rf "$HOME_PATH/package/luci-app-autoupdate"
+		cp -r "$tmpdir/luci-app-autoupdate" "$HOME_PATH/package/luci-app-autoupdate"
+		rm -rf "$tmpdir"
+		if ! grep -q "luci-app-autoupdate" "${HOME_PATH}/include/target.mk"; then
 			sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=luci-app-autoupdate luci-app-ttyd ?g' ${HOME_PATH}/include/target.mk
 		fi
 		echo "增加定时更新固件的插件下载完成"
 	else
+		rm -rf "$tmpdir"
 		echo "增加定时更新固件的插件下载失败"
 	fi
 }
