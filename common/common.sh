@@ -1,6 +1,6 @@
 #!/bin/bash
-# https://github.com/281677160/build-actions
-# common Module by 28677160
+# https://github.com/datout/Openwrt-Auto
+# common Module by datout
 # matrix.target=${FOLDER_NAME}
 
 ACTIONS_VERSION="2.8.0"
