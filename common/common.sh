@@ -1,6 +1,6 @@
 #!/bin/bash
-# https://github.com/datout/Openwrt-Auto
-# common Module by datout
+# https://github.com/281677160/build-actions
+# common Module by 28677160
 # matrix.target=${FOLDER_NAME}
 
 ACTIONS_VERSION="2.8.0"
@@ -142,13 +142,6 @@ function Diy_checkout() {
 # 下载源码后，进行源码微调和增加插件源
 TIME y "正在执行：下载和整理应用,请耐心等候..."
 cd ${HOME_PATH}
-# Sanitize feeds to avoid duplicated/legacy sources (e.g., danshui/relevance)
-for f in feeds.conf.default feeds.conf; do
-  [ -f "${HOME_PATH}/${f}" ] || continue
-  sed -i     -e '/^src-git\s\+danshui\b/d'     -e '/^src-git\s\+dstheme\b/d'     -e '/^src-git\s\+relevance\b/d'     -e '/^src-git\s\+passwall\b/d'     -e '/^src-git\s\+passwall_packages\b/d'     "${HOME_PATH}/${f}"
-done
-rm -rf "${HOME_PATH}/feeds/danshui" "${HOME_PATH}/package/feeds/danshui" 2>/dev/null || true
-
 # 增加一些应用
 echo '#!/bin/sh' > "${DELETE}" && chmod +x "${DELETE}"
 if [[ -d "${LINSHI_COMMON}/auto-scripts" ]]; then
@@ -449,36 +442,6 @@ fi
 if [[ ! "${Default_theme}" == "0" ]] && [[ -n "${Default_theme}" ]]; then
   sed -i "/${Default_theme}/d" $MYCONFIG_FILE
   echo "CONFIG_PACKAGE_luci-theme-$Default_theme=y" >>$MYCONFIG_FILE
-fi
-
-
-# ----------------------------------------------------------
-# ImmortalWrt stable branches: force Go 1.26 for packages that require go>=1.25
-# - REPO_BRANCH: openwrt-23.05 / openwrt-24.10 (and variants)
-# - master: follow upstream (do not override)
-# Source of golang overlay:
-#   1) datout feed snapshot: feeds/datout/packages_lang_golang (preferred)
-#   2) fallback: clone sbwml/packages_lang_golang (26.x)
-# ----------------------------------------------------------
-if [[ "${SOURCE_CODE}" == "IMMORTALWRT" ]] && [[ "${REPO_BRANCH}" != "master" ]] && [[ "${REPO_BRANCH}" =~ (23\.05|24\.10|2410) ]]; then
-  TIME y "ImmortalWrt ${REPO_BRANCH}: 强制使用 Go 1.26（兼容 xray-core 等 go>=1.25）"
-  if [[ -d "${HOME_PATH}/feeds/datout/packages_lang_golang/golang" ]]; then
-    rm -rf "${HOME_PATH}/feeds/packages/lang/golang"
-    mkdir -p "${HOME_PATH}/feeds/packages/lang/golang"
-    cp -a "${HOME_PATH}/feeds/datout/packages_lang_golang/." "${HOME_PATH}/feeds/packages/lang/golang/"
-  else
-    rm -rf "${HOME_PATH}/feeds/packages/lang/golang"
-    git clone --depth=1 https://github.com/sbwml/packages_lang_golang -b 26.x "${HOME_PATH}/feeds/packages/lang/golang"
-  fi
-
-  # Clear old host go artifacts/caches to avoid still using previous toolchain
-  rm -rf "${HOME_PATH}/staging_dir/hostpkg/stamp/.golang"* \
-         "${HOME_PATH}/build_dir/hostpkg/go-"* \
-         "${HOME_PATH}/tmp/go-build" \
-         "${HOME_PATH}/dl/go-mod-cache" || true
-
-  # show version in logs
-  grep -n "GO_VERSION_MAJOR_MINOR" "${HOME_PATH}/feeds/packages/lang/golang/golang/Makefile" | head -n 3 || true
 fi
 
 # 更新和安装feeds
