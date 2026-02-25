@@ -8,7 +8,7 @@
 
 
 <details>
-<summary>⬆️更新说明（2026年2月24号）</summary>
+<summary>⬆️更新说明（2026年2月25号）</summary>
 
  ---
  <br>
