@@ -10,9 +10,9 @@ on:
     branches:
       - main
     paths:
-      - 'build/Immortalwrt/relevance/start'
+      - 'build/Lede/relevance/start'
   # schedule:
-  #   - 'build/Immortalwrt/relevance/start'
+  #   - 'build/Lede/relevance/start'
 env:
   GIT_REPOSITORY: ${{github.repository}}
   REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-       target: [Immortalwrt]
+       target: [Lede]
 
     steps:
     - name: 释放Ubuntu磁盘空间
@@ -48,6 +48,25 @@ jobs:
         
     - name: 准备结束
       uses: actions/checkout@v4
+
+    - name: 检查上游更新（如需请先同步）
+      if: github.repository != 'datout/Openwrt-Auto'
+      shell: bash
+      run: |
+        set -e
+        UPSTREAM_REPO="datout/Openwrt-Auto"
+        UPSTREAM_BRANCH="main"
+        git fetch --prune --unshallow 2>/dev/null || true
+        git remote add upstream "https://github.com/${UPSTREAM_REPO}.git" 2>/dev/null || true
+        git fetch upstream "${UPSTREAM_BRANCH}" --prune
+        echo "Fork HEAD: $(git rev-parse --short HEAD)"
+        echo "Upstream : $(git rev-parse --short upstream/${UPSTREAM_BRANCH})"
+        if git merge-base --is-ancestor "upstream/${UPSTREAM_BRANCH}" HEAD; then echo "Upstream already included."; exit 0; fi
+        behind=$(git rev-list --count HEAD..upstream/${UPSTREAM_BRANCH} || echo 0)
+        echo "::error title=需要先同步上游::你的仓库落后 ${UPSTREAM_REPO}（behind=${behind}）。请先到 Actions 运行【Sync upstream】同步后再重跑本流程。"
+        echo "::notice title=路径::Actions → Sync upstream → Run workflow（如看不到该流程：先用 GitHub 的 Sync fork 同步一次）"
+        exit 1
+
 
     - name: 检测密匙/文件/版本
       uses: ./.github/actions/mishi
@@ -85,7 +104,7 @@ jobs:
       uses: stupidloud/cachewrtbuild@main
       with:
         ccache: 'true'
-        mixkey: "${{ env.SOURCE_CODE }}-${{ env.REPO_BRANCH }}-${{ env.TARGET_PROFILE }}"
+        mixkey: "${{ env.TARGET_PROFILE }}"
         prefix: ${{ github.workspace }}/openwrt
 
     - name: 安装 aria2（多源自动切换）
