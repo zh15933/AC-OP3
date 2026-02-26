@@ -39,7 +39,7 @@ apt-get install -y $(curl -fsSL https://raw.githubusercontent.com/ophub/amlogic-
 
 # 安装gcc g++
 GCC_VERSION="13"
-add-apt-repository --yes ppa:ubuntu-toolchain-r/ppa
+add-apt-repository --yes ppa:ubuntu-toolchain-r/test
 apt-get update -y
 apt-get install -y gcc-${GCC_VERSION} g++-${GCC_VERSION}
 
