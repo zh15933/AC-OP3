@@ -38,7 +38,7 @@ apt-get install -y libfuse-dev
 apt-get install -y $(curl -fsSL https://raw.githubusercontent.com/ophub/amlogic-s9xxx-openwrt/refs/heads/main/make-openwrt/scripts/ubuntu2204-make-openwrt-depends)
 
 # 安装gcc g++
-GCC_VERSION="13"
+GCC_VERSION="12"
 add-apt-repository --yes ppa:ubuntu-toolchain-r/test
 apt-get update -y
 apt-get install -y gcc-${GCC_VERSION} g++-${GCC_VERSION}
