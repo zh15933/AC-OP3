@@ -52,17 +52,17 @@ on:
       UPLOAD_FIRMWARE:
         description: '上传固件到 Github Artifacts'
         required: false
-        default: 'false'
+        default: 'true'
         type: boolean
       UPLOAD_RELEASE:
         description: '发布固件到 Github Releases'
         required: false
-        default: 'true'
+        default: 'false'
         type: boolean
       CACHEWRTBUILD_SWITCH:
         description: '缓存加速编译'
         required: false
-        default: 'false'
+        default: 'true'
         type: boolean
       UPDATE_FIRMWARE_ONLINE:
         description: '在线更新固/打包aarch64系列为img固件'
