@@ -93,6 +93,45 @@ git clone --depth=1 https://github.com/yingziwu/openwrt-fakehttp package/custom/
 git clone --depth=1 https://github.com/yingziwu/luci-app-fakehttp package/custom/luci-app-fakehttp \
   || { echo "ERROR: clone luci-app-fakehttp failed"; exit 1; }
 
+echo ""
+echo "==============================================="
+echo "🛠️  步骤 1: 清理并重新拉取插件仓库"
+echo "==============================================="
+# 删除旧目录
+rm -rf feeds/datout/luci-app-nikki/
+echo "🗑️  已清理旧目录"
+
+# 重新拉取仓库
+git clone https://github.com/nikkinikki-org/openwrt-nikki.git feeds/datout/luci-app-nikki
+echo "🚚 仓库已重新克隆至 feeds/datout/luci-app-nikki"
+
+echo ""
+echo "==============================================="
+echo "🛠️  步骤 2: 移除 面板API 随机密码逻辑"
+echo "==============================================="
+
+# 定义目标文件路径 (注意：这里我根据你克隆的路径更新了变量)
+NIKKI_INIT="feeds/datout/luci-app-nikki/nikki/files/uci-defaults/init.sh"
+
+if [ -f "$NIKKI_INIT" ]; then
+    echo "🎯 找到目标文件: $NIKKI_INIT"
+    
+    # 执行替换：将 random=$(...) 替换为 random=""
+    sed -i 's/random=\$(awk.*)/random=""/g' "$NIKKI_INIT"
+    
+    # 验证修改
+    CHECK_RESULT=$(grep "random=\"" "$NIKKI_INIT")
+    if [ -n "$CHECK_RESULT" ]; then
+        echo "✨ 代码修改成功！当前配置为: $CHECK_RESULT"
+        echo "💡 提示：固件安装后 api_secret 将为空。"
+    else
+        echo "⚠️  警告：sed 替换未生效，请检查 init.sh 中的正则表达式是否匹配。"
+    fi
+else
+    echo "❌ 错误：未找到目标文件 $NIKKI_INIT"
+    echo "请检查仓库目录结构是否发生变化。"
+fi
+echo "==============================================="
 
 # 修改插件名字
 grep -rl '"终端"' . | xargs -r sed -i 's?"终端"?"TTYD"?g'
