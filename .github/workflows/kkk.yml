@@ -1,0 +1,18 @@
+name: 清理流程
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每天凌晨 12:00 自动运行一次
+  workflow_dispatch: # 允许你手动点击按钮立即清理
+
+jobs:
+  delete-runs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete workflow runs
+        uses: Mattraiano/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 1         # 仅仅保留 1 天内的记录
+          keep_minimum_runs: 3   # 无论如何保留最后 3 条记录（防止误删还没看结果的）
