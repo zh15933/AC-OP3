@@ -11,7 +11,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - name: Delete workflow runs
+      - name: 清理历史流程
         run: |
           # 明确指定仓库名，避免 git repository 报错
           repo="${{ github.repository }}"
