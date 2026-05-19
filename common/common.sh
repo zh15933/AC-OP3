@@ -26,7 +26,7 @@ echo "${overall}" >> "${GITHUB_ENV}"
 
 function detect_upstream_luci_edition() {
 # clone 源码完成后，从上游源码自身的 include/version.mk 读取默认版本号。
-# 这样 Lede master 从 23.05/24.10 升级时，文件名、提示、在线更新标识会自动跟随上游。
+# Lede master 从 23.05/24.10 升级时，文件名、提示、在线更新标识会自动跟随上游。
 local version_file=""
 local version_number=""
 
