@@ -88,6 +88,8 @@ rm -rf package/custom/fakehttp package/custom/luci-app-fakehttp
 git clone --depth=1 https://github.com/yingziwu/openwrt-fakehttp package/custom/fakehttp \
   || { echo "ERROR: clone openwrt-fakehttp failed"; exit 1; }
 
+rm -rf package/feeds/datout/luci-app-ssr-plus
+
 # LuCI 界面（可选，但你说要“插件”，一般就加上）
 git clone --depth=1 https://github.com/yingziwu/luci-app-fakehttp package/custom/luci-app-fakehttp \
   || { echo "ERROR: clone luci-app-fakehttp failed"; exit 1; }
