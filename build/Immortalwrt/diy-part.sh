@@ -89,11 +89,11 @@ git clone --depth=1 https://github.com/yingziwu/openwrt-fakehttp package/custom/
   || { echo "ERROR: clone openwrt-fakehttp failed"; exit 1; }
 
 # =========================================================
-# 🔥 核心修复：清理 datout 旧源及官方 feeds 冲突，集成最新 PassWall
+# 🔥 核心修复：清理 datout 旧源、官方 feeds 冲突及僵尸警告
 # =========================================================
 if [ -d "package/feeds/datout" ]; then
   echo "正在清理并隔离 datout 源中与 ImmortalWrt 冲突的组件..."
-  # 1. 彻底移除 datout 第三方旧源里引发错误的旧版组件
+  # 1. 彻底移除 datout 第三方旧源里引发错误的旧版组件（去除 ssr-plus, nikki 的报错提示）
   rm -rf package/feeds/datout/luci-app-ssr-plus
   rm -rf package/feeds/datout/luci-app-passwall
   rm -rf package/feeds/datout/nikki
@@ -102,14 +102,23 @@ if [ -d "package/feeds/datout" ]; then
 fi
 
 echo "正在执行 PassWall 官方推荐的最新代码融合步骤..."
-# 2. 移除 openwrt feeds 自带的核心库与过时 luci 版本（对应图中方法2的第一步）
+# 2. 移除 openwrt feeds 自带的核心库与过时 luci 版本
 rm -rf feeds/packages/net/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,mic}
 rm -rf feeds/luci/applications/luci-app-passwall
 
-# 3. 重新克隆官方最新的 PassWall 核心库与 LuCI 界面（对应图中方法2的第二步）
-# 统一放入 package/ 目录下，确保编译系统优先读取最新版
+# 3. 重新克隆官方最新的 PassWall 核心库与 LuCI 界面
 git clone --depth=1 https://github.com/Openwrt-Passwall/openwrt-passwall-packages package/passwall-packages
 git clone --depth=1 https://github.com/Openwrt-Passwall/openwrt-passwall package/passwall-luci
+
+
+# =========================================================
+# ✨ 强迫症专属：清理 cloudreve, filebrowser, sub-web 的过时 node 依赖报错
+# =========================================================
+echo "正在清理 packages 源中残留的 node 僵尸依赖包..."
+# 移除引发 node-yarn/host 和 node-pnpm/host 报错的过时网盘/前端包
+rm -rf feeds/packages/net/cloudreve
+rm -rf feeds/packages/net/filebrowser
+rm -rf feeds/packages/multimedia/sub-web
 # =========================================================
 
 # LuCI 界面（可选，但你说要“插件”，一般就加上）
