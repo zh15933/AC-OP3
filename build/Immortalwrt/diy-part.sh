@@ -121,6 +121,11 @@ rm -rf feeds/packages/net/filebrowser
 rm -rf feeds/packages/multimedia/sub-web
 # =========================================================
 
+echo "正在强制重刷 feeds 索引以消除警告..."
+./scripts/feeds update -i
+./scripts/feeds install -a
+
+
 # LuCI 界面（可选，但你说要“插件”，一般就加上）
 git clone --depth=1 https://github.com/yingziwu/luci-app-fakehttp package/custom/luci-app-fakehttp \
   || { echo "ERROR: clone luci-app-fakehttp failed"; exit 1; }
