@@ -88,7 +88,23 @@ rm -rf package/custom/fakehttp package/custom/luci-app-fakehttp
 git clone --depth=1 https://github.com/yingziwu/openwrt-fakehttp package/custom/fakehttp \
   || { echo "ERROR: clone openwrt-fakehttp failed"; exit 1; }
 
-rm -rf package/feeds/datout/luci-app-ssr-plus
+# =========================================================
+# 🔥 核心修复：清理 datout 旧源引起的 ImmortalWrt 编译冲突
+# =========================================================
+if [ -d "package/feeds/datout" ]; then
+  echo "正在清理并隔离 datout 源中与 ImmortalWrt 冲突的组件..."
+  # 彻底移除引发错误的旧版组件
+  rm -rf package/feeds/datout/luci-app-ssr-plus
+  rm -rf package/feeds/datout/luci-app-passwall
+  rm -rf package/feeds/datout/nikki
+  rm -rf package/feeds/datout/xray-core
+  rm -rf package/feeds/datout/shadowsocks-rust
+
+  # 重新拉取专门适配 ImmortalWrt 新版环境的 PassWall 组件
+  git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall package/custom/luci-app-passwall
+  git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall-packages package/custom/passwall-packages
+fi
+# =========================================================
 
 # LuCI 界面（可选，但你说要“插件”，一般就加上）
 git clone --depth=1 https://github.com/yingziwu/luci-app-fakehttp package/custom/luci-app-fakehttp \
