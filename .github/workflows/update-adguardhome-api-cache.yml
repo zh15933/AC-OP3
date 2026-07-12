@@ -2,8 +2,8 @@ name: Update AdGuardHome.api cache
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 3 * * *"  # UTC 时间；不想定时就删掉 schedule
+#  schedule:
+#    - cron: "17 3 * * *"  # UTC 时间；不想定时就删掉 schedule
 
 permissions:
   contents: write
