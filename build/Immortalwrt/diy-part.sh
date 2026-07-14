@@ -104,25 +104,16 @@ git clone --depth=1 https://github.com/nikkinikki-org/OpenWrt-nikki.git package/
 
 
 # =========================================================
-<<<<<<< HEAD
-# ✨ 依赖清理：防止 Node 编译在 Imm 25 报错
+# ⚡ 核心修复四：依赖清理与自定义额外插件
 # =========================================================
 if [ -d "feeds/packages" ]; then
   rm -rf feeds/packages/net/cloudreve
   rm -rf feeds/packages/net/filebrowser
   rm -rf feeds/packages/multimedia/sub-web
 fi
-=======
 
-echo "正在强制重刷 feeds 索引以消除警告..."
-./scripts/feeds update -i
-./scripts/feeds install -a
-
-
-# LuCI 界面（可选，但你说要“插件”，一般就加上）
-git clone --depth=1 https://github.com/yingziwu/luci-app-fakehttp package/custom/luci-app-fakehttp \
-  || { echo "ERROR: clone luci-app-fakehttp failed"; exit 1; }
->>>>>>> bdff0f1868a527734b7f7291d99d1ed4a20c3f37
+# 克隆自定义 LuCI 界面（luci-app-fakehttp）
+git clone --depth=1 https://github.com/yingziwu/luci-app-fakehttp package/custom/luci-app-fakehttp || true
 
 
 # =========================================================
