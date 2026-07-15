@@ -145,6 +145,45 @@ git clone --depth=1 https://github.com/yingziwu/openwrt-fakehttp package/custom/
 # LuCI 界面
 git clone --depth=1 https://github.com/yingziwu/luci-app-fakehttp package/custom/luci-app-fakehttp || true
 
+# =========================================================
+# ⚡ 核心修复五：强制注入“大气层”自动更新环境变量 (完美支持他人 Fork 动态识别)
+# =========================================================
+echo "正在为自动更新脚本强制注入兼容的‘大气层’动态环境变量..."
+
+# 1. 动态获取当前编译的 GitHub 仓库名称（如果本地为空则回退到你的默认仓库）
+CURRENT_REPO="${GIT_REPOSITORY:-zh15933/AC-OP3}"
+echo "当前检测到的构建仓库为: ${CURRENT_REPO}"
+
+# 2. 清理系统默认 openwrt_release 中可能冲突的旧自定义变量
+if [ -f "package/base-files/files/etc/openwrt_release" ]; then
+    sed -i '/AUTOBUILD_FIRMWARE/d' package/base-files/files/etc/openwrt_release
+    sed -i '/TARGET_PROFILE/d' package/base-files/files/etc/openwrt_release
+    sed -i '/FIRMWARE_SUFFIX/d' package/base-files/files/etc/openwrt_release
+    sed -i '/GITHUB_REPOSITORY/d' package/base-files/files/etc/openwrt_release
+fi
+
+# 3. 强行追加写入系统默认 release 文件，喂饱 autoupdate 的第一层检测
+mkdir -p package/base-files/files/etc
+cat >> package/base-files/files/etc/openwrt_release <<-EOF
+AUTOBUILD_FIRMWARE="Immortalwrt"
+TARGET_PROFILE="x86-64"
+FIRMWARE_SUFFIX=".img.gz"
+GITHUB_REPOSITORY="${CURRENT_REPO}"
+EOF
+
+# 4. 创建独立备份环境文件，确保任何时候都能通过全局内存变量读取
+cat > package/base-files/files/etc/openwrt_version_custom <<-EOF
+export AUTOBUILD_FIRMWARE="Immortalwrt"
+export TARGET_PROFILE="x86-64"
+export FIRMWARE_SUFFIX=".img.gz"
+export GITHUB_REPOSITORY="${CURRENT_REPO}"
+EOF
+
+# 5. 让系统终端启动时，强制自动加载该全局变量
+if [ -f "package/base-files/files/etc/profile" ]; then
+    sed -i '/openwrt_version_custom/d' package/base-files/files/etc/profile
+    echo "[ -f /etc/openwrt_version_custom ] && . /etc/openwrt_version_custom" >> package/base-files/files/etc/profile
+fi
 
 # =========================================================
 # 汉化与菜单名称美化 (针对 Imm 25 渲染优化)
